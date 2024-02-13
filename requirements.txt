@@ -1,0 +1,6 @@
+discord.py==2.2
+discord-pretty-help
+psutil
+jishaku
+numpy
+scipy
