@@ -214,3 +214,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# project files that should be ignored
+*/dctoken.py
