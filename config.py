@@ -1,4 +1,4 @@
-import dctoken
+import dtok
 
-TOKEN = dctoken.TOKEN
+TOKEN = dtok.TOKEN
 PREFIX = '_'

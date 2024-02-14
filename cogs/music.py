@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ui import Button, View
 import youtube_dl
-from youtube_search import YoutubeSearch
+from youtubesearchpython import searchYoutube
 import lyricsgenius
 
 class MusicPlayer(commands.Cog):
@@ -17,7 +17,7 @@ class MusicPlayer(commands.Cog):
         Searches for and plays audio from a YouTube search query.
         """
         # Search for music
-        results = YoutubeSearch(search, max_results=1).to_dict()
+        results = searchYoutube(search, max_results=1).to_dict()
         url = 'https://www.youtube.com' + results[0]['url_suffix']
 
         # Connect to voice channel
@@ -60,5 +60,5 @@ class StopButtonView(View):
             self.voice_channel.stop()
         await interaction.response.send_message('Stopped playing.', ephemeral=True)
 
-def setup(bot):
-    bot.add_cog(MusicPlayer(bot))
+async def setup(bot):
+    await bot.add_cog(MusicPlayer(bot))

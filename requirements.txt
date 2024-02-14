@@ -1,6 +1,6 @@
-discord.py==2.2
-discord-pretty-help
+discord.py
+youtube_dl
+youtube-search-python
+lyricsgenius
 psutil
-jishaku
-numpy
-scipy
+discord-pretty-help
