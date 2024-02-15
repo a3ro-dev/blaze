@@ -4,3 +4,4 @@ youtube-search-python
 lyricsgenius
 psutil
 discord-pretty-help
+pynacl
