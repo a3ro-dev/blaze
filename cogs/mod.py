@@ -4,6 +4,7 @@ from discord.ext import commands
 import config as cfg
 from datetime import datetime
 import asyncio
+import asyncio
 
 class ConfirmView(discord.ui.View):
     def __init__(self):
@@ -14,11 +15,17 @@ class ConfirmView(discord.ui.View):
     async def confirm(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.value = True
         self.stop()
+        await interaction.response.send_message('<a:Loadingblaze:1207643297791873055> Setting up...')
+        await asyncio.sleep(3)
+        await interaction.response.edit_message(content='<a:success:1207643908016971840> Setup complete.')
 
     @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red) #type: ignore
     async def cancel(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.value = False
         self.stop()
+        await interaction.response.send_message('<a:Loadingblaze:1207643297791873055> Stopping setup...')
+        await asyncio.sleep(3)
+        await interaction.response.edit_message(content='<a:success:1207643908016971840> Setup stopped.')
 
 class ModCog(commands.Cog):
     """
@@ -33,15 +40,29 @@ class ModCog(commands.Cog):
         self.bot = bot
         self.conn = sqlite3.connect(cfg.modDB)
         self.cursor = self.conn.cursor()
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS guilds
-                     (guild_id integer, log_channel integer, welcome_channel integer, main_admin integer)''')
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS guilds
+            (
+                guild_id INTEGER,
+                log_channel INTEGER,
+                welcome_channel INTEGER,
+                main_admin INTEGER,
+                button1_name TEXT,
+                button1_url TEXT,
+                button2_name TEXT,
+                button2_url TEXT,
+                button3_name TEXT,
+                button3_url TEXT,
+                message_description TEXT
+            )
+        ''')
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS warnings
                      (guild_id integer, user_id integer, reason text)''')
         self.conn.commit()
 
 
 
-    @commands.command()
+    @commands.hybrid_command()
     @commands.has_permissions(administrator=True)
     async def setup(self, ctx, log_channel: discord.TextChannel, welcome_channel: discord.TextChannel, main_admin: discord.Member):
         """
@@ -70,9 +91,9 @@ class ModCog(commands.Cog):
             else:
                 await ctx.send("Stopping setup... :loading:")
                 await asyncio.sleep(0.5)
-                await ctx.edit("Reverting Changed... :loading:")
+                await ctx.message.edit(content="Reverting Changes... :loading:")
                 await asyncio.sleep(0.5)                
-                await ctx.edit("Clearing data... :loading:")
+                await ctx.message.edit(content="Clearing data... :loading:")
                 await asyncio.sleep(3)
                 await ctx.send("Setup stopped. :x:")
         except Exception as e:
@@ -134,7 +155,7 @@ class ModCog(commands.Cog):
             embed = discord.Embed(title=f"Error: {str(e)}", color=cfg.CLR)
             await ctx.send(embed=embed)
 
-    commands.command()
+    commands.hybrid_command()
     @commands.has_permissions(kick_members=True)
     async def kick(self, ctx, member: discord.Member, *, reason=None):
         """
