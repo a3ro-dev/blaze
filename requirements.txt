@@ -5,3 +5,6 @@ lyricsgenius
 psutil
 discord-pretty-help
 pynacl
+numpy
+matplotlib
+scipy
