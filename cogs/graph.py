@@ -28,7 +28,7 @@ class GraphCog(commands.Cog):
         graphGen.plotGraph(values)
 
         # Send the image
-        await ctx.send(file=discord.File('assets/plot.png'))
+        await ctx.send(file=discord.File('cogs/assets/plot.png'))
 
     @commands.command()
     async def cartesianPlane(self, ctx, *values: float):
@@ -46,7 +46,7 @@ class GraphCog(commands.Cog):
         graphGen.generateCartesianPlane(values)
 
         # Send the image
-        await ctx.send(file=discord.File('assets/plot.png'))
+        await ctx.send(file=discord.File('cogs/assets/plot.png'))
 
 async def setup(bot):
    await bot.add_cog(GraphCog(bot))

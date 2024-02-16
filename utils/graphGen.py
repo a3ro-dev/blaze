@@ -25,7 +25,7 @@ class graphGen:
         plt.plot(x, y)
 
         # Save the plot as an image
-        plt.savefig('assets/plot.png')
+        plt.savefig('cogs/assets/plot.png')
         plt.close()
 
     @staticmethod
@@ -50,7 +50,7 @@ class graphGen:
         plt.plot(x, y)
 
         # Save the plot as an image
-        plt.savefig('assets/plot.png')
+        plt.savefig('cogs/assets/plot.png')
         plt.close()
 
         # Usage:

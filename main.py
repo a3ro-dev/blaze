@@ -63,6 +63,7 @@ async def on_ready():
                 print(f'Loaded {file[:-3]}')
             except Exception as e:
                 print(f'Failed to load {file[:-3]} because: {str(e)}')
+    await update_presence()
 
 
 
