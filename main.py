@@ -1,5 +1,21 @@
 import subprocess
+import sys
+import os
+
+# Python 3.8 or higher is required
+if sys.version_info < (3, 10):
+    print("You need at least Python 3.10.x to run this script")
+    sys.exit(1)
+
+# Check if requirements.txt exists
+if not os.path.isfile('requirements.txt'):
+    print("requirements.txt does not exist")
+    sys.exit(1)
+
+# Install required packages
+print("Installing required packages...")
 subprocess.run('pip install -r requirements.txt', shell=True)
+
 import os
 import discord
 from discord.ext import commands
@@ -9,6 +25,7 @@ import random
 import asyncio
 from pretty_help import PrettyHelp
 
+
 class Bot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
@@ -16,12 +33,14 @@ class Bot(commands.Bot):
         intents.members = True
 
         super().__init__(case_insensitive=True,
-                        command_prefix=commands.when_mentioned_or(cfg.PREFIX),
-                        intents=intents,
-                        owner_ids=[905658967005495356],
-                        help_command=PrettyHelp())
+                         command_prefix=commands.when_mentioned_or(cfg.PREFIX),
+                         intents=intents,
+                         owner_ids=[905658967005495356],
+                         help_command=PrettyHelp())
+
 
 bot = Bot()
+
 
 async def update_presence():
     while True:
@@ -48,13 +67,14 @@ async def update_presence():
         # Wait for 5 seconds before updating the presence again
         await asyncio.sleep(5)
 
+
 @bot.event
 async def on_ready():
     await bot.wait_until_ready()  # Wait until the bot is ready
-    print(f'Logged in as {bot.user.name} | {bot.user.id}') #type: ignore
+    print(f'Logged in as {bot.user.name} | {bot.user.id}') # Print the bots name and ID
     print(f'Discord.py API version: {discord.__version__}')
     print(f'Successfully logged in and booted...!')
-    await bot.load_extension('jishaku')  # Add the 'await' keyword here
+    await bot.load_extension('jishaku') # Load Jishaku
     print("Now loading cogs!")
     for file in os.listdir('./cogs'):
         if file.endswith('.py'):
@@ -64,7 +84,6 @@ async def on_ready():
             except Exception as e:
                 print(f'Failed to load {file[:-3]} because: {str(e)}')
     await update_presence()
-
 
 
 bot.run(cfg.TOKEN)

@@ -1,71 +1,89 @@
+import datetime
+import sqlite3
+import time
+
 import discord
 from discord.ext import commands
-import sqlite3
-import asyncio
+import config as cfg
 
-class ConfirmView(discord.ui.View):
-    def __init__(self):
-        super().__init__()
+class Ticket(commands.Cog):
+    """This is responsible for the ticket system"""
 
-    @discord.ui.button(label='Confirm', style=discord.ButtonStyle.green) #type: ignore
-    async def confirm(self, button: discord.ui.Button, interaction: discord.Interaction[discord.Client]):
-        self.value = True
-        self.stop()
-
-    @discord.ui.button(label='Cancel', style=discord.ButtonStyle.red) #type: ignore
-    async def cancel(self, button: discord.ui.Button, interaction: discord.Interaction[discord.Client]):
-        self.value = False
-        self.stop()
-
-class TicketView(discord.ui.View):
-    def __init__(self):
-        super().__init__()
-
-    @discord.ui.button(label='Open Ticket', style=discord.ButtonStyle.green) #type: ignore
-    async def open_ticket(self, button: discord.ui.Button, interaction: discord.Interaction):
-        guild_id = 'guild' + str(interaction.guild.id) #type: ignore
-        conn = sqlite3.connect('db/tickets.db')
-        cursor = conn.cursor()
-        cursor.execute(f"SELECT * FROM {guild_id}")
-        row = cursor.fetchone()
-        conn.close()
-
-        if row is not None:
-            category_id = row[1]
-            category = interaction.guild.get_channel(category_id) #type: ignore
-            ticket_channel = await category.create_text_channel('ticket', topic=f"Ticket for {interaction.user.mention}") #type: ignore
-            ticket_channel.send(f"{interaction.user.mention}'s ticket", view=ConfirmView()).__await__()
-
-class TicketSystem(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @commands.hybrid_command()
-    async def setup_ticket(self, ctx, channel: discord.TextChannel, body: str, greeting_embed: str, roles: commands.Greedy[discord.Role], category: discord.CategoryChannel):
-        # Connect to the database
+    async def setup_ticket(self, ctx, category_id: int, panelMessage: str, roles: commands.Greedy[discord.Role]):
+        guild_id = 'guild' + str(ctx.guild.id)
         conn = sqlite3.connect('db/tickets.db')
         cursor = conn.cursor()
-
-        # Create a table for the guild if it doesn't exist
-        guild_id = 'guild' + str(ctx.guild.id)
-        cursor.execute(f"CREATE TABLE IF NOT EXISTS {guild_id} (channel_id INTEGER, ticketcategory_id INTEGER, body TEXT, greeting_embed TEXT, role_ids TEXT)")
-
-        # Insert the ticket information into the table
-        channel_id = channel.id
-        ticketcategory_id = category.id
-        role_ids = ','.join(str(r.id) for r in roles)
-        cursor.execute(f"INSERT INTO {guild_id} (channel_id, ticketcategory_id, body, greeting_embed, role_ids) VALUES (?, ?, ?, ?, ?)",
-                       (channel_id, ticketcategory_id, body, greeting_embed, role_ids))
-
-        # Commit the changes and close the connection
+        cursor.execute(
+            f"CREATE TABLE IF NOT EXISTS {guild_id} (category_id INTEGER, panel_MSG TEXT, role_ids TEXT)")
+        role_ids = ','.join(str(role.id) for role in roles)
+        cursor.execute(
+            f"INSERT INTO {guild_id} (category_id, panel_MSG, role_ids) VALUES (?, ?, ?)",
+            (category_id, panelMessage, role_ids))
         conn.commit()
         conn.close()
 
-        # Create the view
-        view = TicketView()
+    @discord.ui.button(label='Ticket', style=discord.ButtonStyle.green, custom_id='Ticket:green')
+    async def ticketopen(self, interaction: discord.Interaction, button: discord.ui.Button):
+        guild_id = 'guild' + str(interaction.guild.id)
+        conn = sqlite3.connect('db/tickets.db')
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT category_id, panel_MSG, role_ids FROM {guild_id}")
+        row = cursor.fetchone()
+        conn.close()
 
-        # Send a message with the view
-        await channel.send(body, view=view)
+        if row is not None:
+            category_id, panel_MSG, role_ids = row
+            category = discord.utils.get(interaction.guild.categories, id=int(category_id))
+            roles = [discord.utils.get(interaction.guild.roles, id=int(role_id)) for role_id in role_ids.split(',')]
+            panelMessage = panel_MSG
 
-async def setup(bot):
-    await bot.add_cog(TicketSystem(bot))
+            if row is not None:
+                panelMessage = row[0]
+
+            overwrites = {
+                interaction.guild.default_role: discord.PermissionOverwrite(
+                    read_messages=False,
+                    view_channel=False
+                ),
+                interaction.user: discord.PermissionOverwrite(
+                    read_messages=True,
+                    send_messages=True,
+                )}
+            for role in roles:
+                overwrites[role] = discord.PermissionOverwrite(
+                    view_channel=True,
+                    send_messages=True,
+                    manage_channels=True,
+                    manage_messages=True,
+                    manage_permissions=True
+                )
+            await ticket.edit(overwrites=overwrites)
+            await interaction.response.send_message(f'Your Ticket has been opened. Please move to {ticket.mention}',
+                                                    ephemeral=True)
+            user = interaction.user.name
+            timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            serverNAME = interaction.guild.name
+            embed = discord.Embed(title=f'This ticket is opened by {interaction.user.mention}.',
+                                  description=,
+                                  color=cfg.CLR)
+            embed.timestamp = discord.utils.utcnow()
+            embed.set_footer(text=f'{interaction.guild.name} | {interaction.guild.id}', icon_url=interaction.guild.icon.url)
+            view = CLOSE()
+            msg = await ticket.send(content=f'{interaction.user.mention} | {panel_MSG}', embed=embed, view=view)
+            await msg.pin()
+
+
+class CLOSE(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label='CLOSE', style=discord.ButtonStyle.danger, custom_id='CLOSE:RED')
+    async def closeticket(self, interaction=discord.Interaction, button=discord.ui.Button, ):
+        await interaction.channel.send(f'This ticket was closed by {interaction.user.mention}')
+        channel = interaction.channel
+        time.sleep(10)
+        await channel.delete()
