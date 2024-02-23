@@ -218,3 +218,4 @@ $RECYCLE.BIN/
 # project files that should be ignored
 
 dtok.py
+/Lavalink/
